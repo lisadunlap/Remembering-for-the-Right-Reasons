@@ -119,21 +119,6 @@ def run(args, run_id):
         wandb.summary[f"Gem bwt Task {t}"] = gem_bwt
         running_bwt = utils.get_running_acc_bwt(avg_rii, t)
         wandb.summary[f"Acc bwt Task {t}"] = running_bwt
-    # for t,ncla in args.taskcla:
-    #     test_tasks.append(t)
-    #     # task_model = appr.load_checkpoint(task_id=t, args.test_checkpoint)
-    #     task_model = appr.load_model(task_id=t)
-    #     total_correct, total_num = 0, 0
-    #     accs = []
-    #     for i, tt in enumerate(test_tasks):
-    #         loss, acc, correct, num = appr.test(task_model, tt)
-    #         # res = appr.eval_test(task_model, tt)
-    #         accs.append(res['acc'])
-    #         avg_rii[t][tt] = acc
-    #         print(f"Task {tt} num correct = {correct} num = {num}")
-    #         total_correct += correct
-    #         total_num += num
-    #     wandb.log(res)
 
 
 def main(args):

@@ -225,6 +225,10 @@ class iCUBFSCI(CUBFSCI):
         img = default_loader(path)
         if self.transform is not None:
             img = self.transform(img)
+        if tt == 0:
+            scaled_target = target
+        else:
+            scaled_target = target + 100 + 10*tt
 
         return img, target, tt
 

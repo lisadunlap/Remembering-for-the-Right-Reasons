@@ -3,6 +3,8 @@ import numpy as np
 import torch
 
 import os
+
+# from wandb.sdk.data_types import NumpyHistogram
 import utils
 
 from matplotlib import pyplot as plt
@@ -236,8 +238,8 @@ class RRR(object):
                 sal_loss = self.sal_loss(explanations.view_as(s), s)
                 sal_loss *= self.args.saliency.regularizer
 
-                if self.args.wandb.log:
-                    wandb.log({"Saliency loss": sal_loss.item()})
+                # if self.args.wandb.log:
+                #     wandb.log({"Saliency loss": sal_loss.item()})
 
                 try:
                     sal_loss.requires_grad = True
@@ -259,6 +261,11 @@ class RRR(object):
                 output=self.model.forward(images, tt)
             else:
                 output = self.model.forward(images)
+            _, pred=output.max(1)
+    
+            if self.epoch == 0:
+                print("training task ", tt, pred, targets)
+                wandb.log({'train preds': pred, "train targets": targets})
 
             loss=self.criterion(output,targets)
 
@@ -317,43 +324,45 @@ class RRR(object):
 
         return res
 
-    def eval_test(self,model, task_id, set_name='valid'):
-        total_loss=0
-        total_acc=0
-        total_num=0
-        self.model.eval()
-        res={}
-        old_tasks_loss, sal_loss = 0, 0
-        data_loader = self.dataset.get(task_id=task_id)
+    # def eval_test(self,model, task_id, set_name='valid'):
+    #     total_loss=0
+    #     total_acc=0
+    #     total_num=0
+    #     self.model.eval()
+    #     res={}
+    #     old_tasks_loss, sal_loss = 0, 0
+    #     data_loader = self.dataset.get(task_id=task_id)
 
-        # Loop batches
-        with torch.no_grad():
+    #     # Loop batches
+    #     with torch.no_grad():
 
-            for batch_idx, (x, y, tt) in enumerate(data_loader['val']):
-                # Fetch x and y labels
-                images=x.to(device=self.device, dtype=torch.float)
-                targets=y.to(device=self.device, dtype=torch.long)
-                tt=tt.to(device=self.device, dtype=torch.long)
+    #         for batch_idx, (x, y, tt) in enumerate(data_loader['val']):
+    #             # Fetch x and y labels
+    #             images=x.to(device=self.device, dtype=torch.float)
+    #             targets=y.to(device=self.device, dtype=torch.long)
+    #             tt=tt.to(device=self.device, dtype=torch.long)
 
-                # Forward
-                if self.args.architecture.multi_head:
-                    output = model.forward(images, tt)
-                else:
-                    output = model.forward(images)
+    #             # Forward
+    #             if self.args.architecture.multi_head:
+    #                 output = model.forward(images, tt)
+    #             else:
+    #                 output = model.forward(images)
 
-                loss = self.criterion(output,targets)
-                _, pred=output.max(1)
-                hits = (pred==targets).float()
+    #             loss = self.criterion(output,targets)
+    #             if self.epoch == 0:
+    #                 wandb.log({'test preds': pred, "test targets": targets})
+    #             _, pred=output.max(1)
+    #             hits = (pred==targets).float()
 
-                # Log
-                total_loss += loss
-                total_acc += hits.sum().item()
-                total_num += targets.size(0)
+    #             # Log
+    #             total_loss += loss
+    #             total_acc += hits.sum().item()
+    #             total_num += targets.size(0)
 
-        res['loss'], res['acc'] = total_loss/(batch_idx+1), 100*total_acc/total_num
-        res['size'] = self.loader_size(data_loader)
+    #     res['loss'], res['acc'] = total_loss/(batch_idx+1), 100*total_acc/total_num
+    #     res['size'] = self.loader_size(data_loader)
 
-        return res
+    #     return res
 
 
     def test(self, model, test_id, model_id=None):
@@ -382,6 +391,8 @@ class RRR(object):
                     output = model.forward(images)
 
                 _, pred = output.max(1)
+
+                print("testing task ", tt, pred, targets)
 
                 loss=self.criterion(output,targets)
                 hits=(pred==targets).float()
@@ -682,4 +693,3 @@ class RRR(object):
         print("------------------------------------------------------------------------------")
         print("                             TOTAL:  %sB" % utils.human_format(
             architecture_memory+samples_memory+saliency_memory))
-

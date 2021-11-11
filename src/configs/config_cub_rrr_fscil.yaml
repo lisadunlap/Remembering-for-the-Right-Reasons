@@ -39,7 +39,7 @@ saliency:
   lr: 0.0005
 
 train:
-  nepochs: 70
+  nepochs: 2
   lr: 0.001
   lr_factor: 3
   lr_patience: 5
